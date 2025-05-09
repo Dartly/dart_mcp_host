@@ -36,7 +36,7 @@ Future<void> startMcpServer({required String mode, int port = 8080}) async {
 
     // Register tools, resources, and prompts
     _registerTools(server);
-    // _registerResources(server);
+    _registerResources(server);
     _registerPrompts(server);
 
     // Create transport based on mode

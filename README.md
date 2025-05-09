@@ -1,6 +1,6 @@
 # Dart MCP Host
 
-一个用于管理和连接 MCP（Multi-Channel Protocol）服务器的 Dart 库。
+一个用于管理和连接 MCP 服务器的 Dart 库。
 
 ## 功能特性
 
