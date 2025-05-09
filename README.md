@@ -36,6 +36,8 @@ void main() async {
 
   final log = Logger('MCPHostExample');
   log.info('Initializing MCPHost...');
+  //使用配置文件加载配置
+  // final config = await MCPConfigManager.loadConfig('example/.mcp.json');
   final host = DartMCPHost(
     config: MCPConfig(
       servers: {
@@ -76,9 +78,7 @@ void main() async {
     });
     if (promptResult != null) {
       log.info('Prompt metadata: ${json.encode(promptResult.description)}');
-      log.info(
-        'Prompt content: ${json.encode(promptResult.messages)}',
-      );
+      log.info('Prompt content: ${json.encode(promptResult.messages)}');
     } else {
       log.warning('Prompt not found: $promptName');
     }
@@ -88,5 +88,6 @@ void main() async {
 
   log.info('Example completed.');
 }
+
 
 ```
