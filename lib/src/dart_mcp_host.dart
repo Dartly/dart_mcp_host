@@ -13,6 +13,8 @@ class DartMCPHost {
 
   DartMCPHost({required this.config});
 
+  final Map<String, BaseMCPClient> _clients = {};
+
   /// 获取所有可用工具
   Future<Map<String, List<Tool>>> getAllTools() async {
     _log.info('Getting all available tools from configured servers');
@@ -20,11 +22,23 @@ class DartMCPHost {
     for (final entry in config.servers.entries) {
       final String serverName = entry.key;
       final ServerConfig serverConfig = entry.value;
-      _log.info('Creating client for server: $serverName');
-      final client = await _createClient(serverConfig);
+      BaseMCPClient client;
+      if (_clients.containsKey(serverName)) {
+        client = _clients[serverName]!;
+      } else {
+        _log.info('Creating client for server: $serverName');
+        client = await _createClient(serverConfig);
+        _clients[serverName] = client;
+        try {
+          _log.info('Initializing client for server: $serverName');
+          await client.initialize();
+        } catch (e) {
+          _log.warning('Failed to initialize client for server $serverName: $e');
+          _clients.remove(serverName);
+          continue;
+        }
+      }
       try {
-        _log.info('Initializing client for server: $serverName');
-        await client.initialize();
         _log.info('Listing tools from server: $serverName');
         final tools = await client.listTools();
         allTools[serverName] = tools ?? [];
@@ -34,9 +48,6 @@ class DartMCPHost {
       } catch (e) {
         _log.warning('Failed to get tools from server $serverName: $e');
         allTools[serverName] = [];
-      } finally {
-        _log.info('Disconnecting client for server: $serverName');
-        client.disconnect();
       }
     }
     _log.info('Retrieved tools from ${allTools.length} servers');
@@ -63,11 +74,23 @@ class DartMCPHost {
       _log.severe('Server not found: $serverName');
       throw Exception('Server not found: $serverName');
     }
-    _log.info('Creating client for server: $serverName');
-    final client = await _createClient(serverConfig);
+    BaseMCPClient client;
+    if (_clients.containsKey(serverName)) {
+      client = _clients[serverName]!;
+    } else {
+      _log.info('Creating client for server: $serverName');
+      client = await _createClient(serverConfig);
+      _clients[serverName] = client;
+      try {
+        _log.info('Initializing client for server: $serverName');
+        await client.initialize();
+      } catch (e) {
+        _log.warning('Failed to initialize client for server $serverName: $e');
+        _clients.remove(serverName);
+        rethrow;
+      }
+    }
     try {
-      _log.info('Initializing client for server: $serverName');
-      await client.initialize();
       _log.info(
         'Executing tool call: $toolName with arguments: ${json.encode(arguments)}',
       );
@@ -77,9 +100,6 @@ class DartMCPHost {
     } catch (e) {
       _log.severe('Error calling tool $toolName on server $serverName: $e');
       rethrow;
-    } finally {
-      _log.info('Disconnecting client for server: $serverName');
-      client.disconnect();
     }
   }
 
@@ -90,11 +110,23 @@ class DartMCPHost {
     for (final entry in config.servers.entries) {
       final String serverName = entry.key;
       final ServerConfig serverConfig = entry.value;
-      _log.info('Creating client for server: $serverName');
-      final client = await _createClient(serverConfig);
+      BaseMCPClient client;
+      if (_clients.containsKey(serverName)) {
+        client = _clients[serverName]!;
+      } else {
+        _log.info('Creating client for server: $serverName');
+        client = await _createClient(serverConfig);
+        _clients[serverName] = client;
+        try {
+          _log.info('Initializing client for server: $serverName');
+          await client.initialize();
+        } catch (e) {
+          _log.warning('Failed to initialize client for server $serverName: $e');
+          _clients.remove(serverName);
+          continue;
+        }
+      }
       try {
-        _log.info('Initializing client for server: $serverName');
-        await client.initialize();
         _log.info('Listing prompts from server: $serverName');
         final prompts = await client.listPrompts();
         allPrompts[serverName] = prompts ?? [];
@@ -104,9 +136,6 @@ class DartMCPHost {
       } catch (e) {
         _log.warning('Failed to get prompts from server $serverName: $e');
         allPrompts[serverName] = [];
-      } finally {
-        _log.info('Disconnecting client for server: $serverName');
-        client.disconnect();
       }
     }
     _log.info('Retrieved prompts from ${allPrompts.length} servers');
@@ -116,20 +145,32 @@ class DartMCPHost {
   /// 获取提示词
   Future<GetPromptResult?> getPrompt(
     String serverName,
-    String promptName, [
-    Map<String, dynamic>? promptArguments,
-  ]) async {
+    String promptName,
+    [Map<String, dynamic>? promptArguments]
+  ) async {
     _log.info('Getting prompt: $promptName from server: $serverName');
     final serverConfig = config.servers[serverName];
     if (serverConfig == null) {
       _log.severe('Server not found: $serverName');
       throw Exception('Server not found: $serverName');
     }
-    _log.info('Creating client for server: $serverName');
-    final client = await _createClient(serverConfig);
+    BaseMCPClient client;
+    if (_clients.containsKey(serverName)) {
+      client = _clients[serverName]!;
+    } else {
+      _log.info('Creating client for server: $serverName');
+      client = await _createClient(serverConfig);
+      _clients[serverName] = client;
+      try {
+        _log.info('Initializing client for server: $serverName');
+        await client.initialize();
+      } catch (e) {
+        _log.warning('Failed to initialize client for server $serverName: $e');
+        _clients.remove(serverName);
+        rethrow;
+      }
+    }
     try {
-      _log.info('Initializing client for server: $serverName');
-      await client.initialize();
       final result = await client.getPrompt(promptName, promptArguments);
       _log.info('Prompt retrieved: $promptName');
       return result;
@@ -138,9 +179,20 @@ class DartMCPHost {
         'Error getting prompt $promptName from server $serverName: $e',
       );
       rethrow;
-    } finally {
-      _log.info('Disconnecting client for server: $serverName');
-      client.disconnect();
     }
+  }
+
+  /// 断开全部连接
+  Future<void> disconnects() async {
+    _log.info('Disconnecting all clients');
+    for (final client in _clients.values) {
+      try {
+         client.disconnect();
+      } catch (e) {
+        _log.warning('Failed to disconnect client: $e');
+      }
+    }
+    _clients.clear();
+    _log.info('All clients disconnected');
   }
 }

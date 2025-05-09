@@ -60,6 +60,7 @@ void main() async {
   } catch (e) {
     log.severe('Error getting prompt: $e');
   }
-
   log.info('Example completed.');
+  host.disconnects();
+
 }
