@@ -11,16 +11,8 @@ void main() async {
 
   final log = Logger('MCPHostExample');
   log.info('Initializing MCPHost...');
-  final host = DartMCPHost(
-    config: MCPConfig(
-      servers: {
-        'Weather': SseServerConfig(
-          url: 'https://mcp.api-inference.modelscope.cn/sse/46d1d90ae7984a',
-        ),
-        'Time': SseServerConfig(url: 'http://localhost:8999/sse'),
-      },
-    ),
-  );
+  final config = await MCPConfigManager.loadConfig('example/.mcp.json');
+  final host = DartMCPHost(config: config);
   log.info('MCPHost initialized successfully.');
 
   // 获取所有工具
@@ -51,9 +43,7 @@ void main() async {
     });
     if (promptResult != null) {
       log.info('Prompt metadata: ${json.encode(promptResult.description)}');
-      log.info(
-        'Prompt content: ${json.encode(promptResult.messages)}',
-      );
+      log.info('Prompt content: ${json.encode(promptResult.messages)}');
     } else {
       log.warning('Prompt not found: $promptName');
     }

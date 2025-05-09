@@ -126,7 +126,6 @@ class MCPConfigManager {
     await configFile.writeAsString(configData);
   }
 
-  /// 获取默认配置文件路径
   static String _getDefaultConfigPath() {
     final String homeDir =
         Platform.environment['HOME'] ??

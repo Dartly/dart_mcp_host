@@ -116,9 +116,9 @@ class DartMCPHost {
   /// 获取提示词
   Future<GetPromptResult?> getPrompt(
     String serverName,
-    String promptName,
-    [Map<String, dynamic>? promptArguments]
-  ) async {
+    String promptName, [
+    Map<String, dynamic>? promptArguments,
+  ]) async {
     _log.info('Getting prompt: $promptName from server: $serverName');
     final serverConfig = config.servers[serverName];
     if (serverConfig == null) {

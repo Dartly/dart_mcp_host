@@ -1,0 +1,9 @@
+{
+    "mcpServers": {
+       
+        "Time": {
+            "type": "sse",
+            "url": "http://localhost:8999/sse"
+        }
+    }
+}

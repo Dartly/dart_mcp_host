@@ -3,7 +3,6 @@ description: A starting point for Dart libraries or applications.
 version: 0.0.1
 repository: https://github.com/Dartly/dart_mcp_host.git
 homepage: https://github.com/Dartly/dart_mcp_host.git
-publish_to: https://pub.dev/
 environment:
   sdk: ^3.7.2
 
